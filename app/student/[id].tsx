@@ -1,7 +1,7 @@
 import { type Student } from '@/components/StudentCard';
 import { API_BASE_URL } from '@/constants/api';
 import { useAuth } from '@/hooks/useAuth';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { Redirect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
@@ -41,7 +41,10 @@ export default function StudentDetailsScreen() {
     }
   };
 
-  useEffect(() => { loadStudent(); }, [id]);
+  useEffect(() => { if (token) loadStudent(); }, [id, token]);
+
+  // Protected route: unauthenticated users are sent to the sign-in screen.
+  if (!token) return <Redirect href="/sign-in" />;
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
