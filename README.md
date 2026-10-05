@@ -12,20 +12,20 @@ Date: October 2, 2026
 
 ### Required Features
 
-- [/] Login
-- [/] Authentication state
-- [/] Secure token storage
-- [/] Protected navigation
-- [/] Dashboard
-- [/] Student API request
-- [/] Loading state
-- [/] Error state
-- [/] Empty state
-- [/] Search/filter
-- [/] Dynamic student details
-- [/] Profile
-- [/] Session restoration
-- [/] Logout
+- [x] Login
+- [x] Authentication state
+- [x] Secure token storage
+- [x] Protected navigation
+- [x] Dashboard
+- [x] Student API request
+- [x] Loading state
+- [x] Error state
+- [x] Empty state
+- [x] Search/filter
+- [x] Dynamic student details
+- [x] Profile
+- [x] Session restoration
+- [x] Logout
 
 ### API
 
