@@ -29,17 +29,19 @@ Date: October 2, 2026
 
 ### API
 
-Base URL: `REPLACE_WITH_EXAM_API` (set in `constants/api.ts`)
+Base URL: `https://jsonplaceholder.typicode.com` (set in `constants/api.ts`).
+This is the guide API sent by the instructor. It is a fake API, so the app maps
+the required endpoints to the resources it provides:
 
-POST /login
+| Required endpoint | Used in this app |
+|---|---|
+| POST /login | GET /users (the email must match a user) |
+| GET /students | GET /users |
+| GET /students/{id} | GET /users/{id} |
+| GET /profile | GET /users/{logged-in user id} |
 
-GET /students
-
-GET /students/{id}
-
-GET /profile
-
-Use the instructor's API documentation for payloads and response fields.
+jsonplaceholder has no passwords, so the password field is required but not
+verified, and no password is stored. Test email: `Sincere@april.biz` with any password.
 
 ### How to Run
 
@@ -50,19 +52,14 @@ npx expo start
 
 Press `w` for web, or run `npm run web` directly.
 
-The starter opens the dashboard without authentication so its screens can be inspected.
-Use **Open Sign In** to preview the login screen. Login, logout, and View Details
-buttons intentionally do nothing until their TODOs are completed. Student screens
-initially show loading until students implement the loaders. Preview the detail
-layout on web at `/student/1`; this does not create a sample API record.
+The app opens the sign-in screen first. The application tabs and the
+`/student/[id]` detail route are both protected: unauthenticated users are
+redirected to `/sign-in`.
 
-Search for `TODO EXAM` throughout the project. No requests or credentials are
-provided. Protect both the application tabs and the student detail route.
-
-Expo SecureStore is used only in `context/AuthContext.tsx`. Its methods are not
-implemented in this starter. SecureStore supports native platforms, not web;
-check availability before calling it and verify secure session persistence on
-Android/iOS. See the [Expo SDK 54 SecureStore documentation](https://docs.expo.dev/versions/v54.0.0/sdk/securestore/).
+The access token is saved with Expo SecureStore (`context/AuthContext.tsx`) on
+Android/iOS and restored when the app starts. SecureStore does not support web,
+so the web build falls back to `localStorage`; verify secure session persistence
+on Android/iOS.
 
 Compiler and lint checks:
 
