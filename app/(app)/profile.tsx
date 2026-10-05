@@ -1,23 +1,63 @@
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { API_BASE_URL } from '@/constants/api';
+import { type User } from '@/context/AuthContext';
 import { useAuth } from '@/hooks/useAuth';
+import { useEffect, useState } from 'react';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 export default function ProfileScreen() {
-  const { user, token, logout } = useAuth();
-  // TODO EXAM: Load GET /profile with fetch(), async/await, and the Bearer token.
-  // TODO EXAM: Add loading/error state with useState and call the loader using useEffect.
-  // TODO EXAM: Check response.ok, handle 401 Unauthorized, and display returned profile data.
+  const { token, user: ctxUser, logout } = useAuth();
+  const [profile, setProfile] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    const load = async () => {
+      if (!token) return;
+      setLoading(true);
+      setError('');
+      try {
+        // GET /profile using fetch() and Bearer token
+        const response = await fetch(`${API_BASE_URL}/users/1`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!response.ok) {
+          if (response.status === 401) { logout(); return; }
+          throw new Error(`Failed to load profile. (${response.status})`);
+        }
+        const data = await response.json();
+        setProfile({
+          id: data.id,
+          name: ctxUser?.name ?? data.name,
+          email: ctxUser?.email ?? data.email,
+          role: 'student',
+        });
+      } catch (e: any) {
+        setError(e?.message ?? 'Failed to load profile.');
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, [token]);
+
+  const display = profile ?? ctxUser;
+
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>MY PROFILE</Text>
-      <View style={styles.card}>
-        <Text style={styles.text}>Name: {user?.name || '—'}</Text>
-        <Text style={styles.text}>Email: {user?.email || '—'}</Text>
-        <Text style={styles.text}>Role: {user?.role || '—'}</Text>
-        {!user && <Text style={styles.note}>No profile loaded yet.</Text>}
-      </View>
+      {loading ? <ActivityIndicator color="#245bb2" />
+        : error ? <Text style={styles.error}>{error}</Text>
+        : (
+          <View style={styles.card}>
+            <Text style={styles.text}>Name: {display?.name || '—'}</Text>
+            <Text style={styles.text}>Email: {display?.email || '—'}</Text>
+            <Text style={styles.text}>Role: {display?.role || 'student'}</Text>
+          </View>
+        )}
       <Text style={styles.text}>Session Status: {token ? 'Authenticated' : 'Not Available'}</Text>
-      <Pressable accessibilityRole="button" style={styles.button} onPress={logout}><Text style={styles.buttonText}>LOGOUT</Text></Pressable>
-      <Text style={styles.note}>Exam starter: complete logout() in AuthContext.</Text>
+      <Pressable accessibilityRole="button" style={styles.button} onPress={logout}>
+        <Text style={styles.buttonText}>LOGOUT</Text>
+      </Pressable>
     </ScrollView>
   );
 }
@@ -27,7 +67,7 @@ const styles = StyleSheet.create({
   title: { color: '#17324d', fontSize: 24, fontWeight: '700' },
   card: { backgroundColor: '#ffffff', padding: 20, gap: 16, borderRadius: 12 },
   text: { color: '#536579', fontSize: 16 },
-  note: { color: '#536579', fontSize: 12 },
+  error: { color: '#b42318' },
   button: { backgroundColor: '#245bb2', padding: 16, borderRadius: 8, alignItems: 'center' },
   buttonText: { color: '#ffffff', fontWeight: '600' },
 });

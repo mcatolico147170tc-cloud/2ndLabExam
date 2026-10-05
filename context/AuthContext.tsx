@@ -1,11 +1,14 @@
-/* eslint-disable @typescript-eslint/no-unused-vars -- Setters and imports are reserved for exam TODOs. */
-import { createContext, useEffect, useState, type ReactNode } from 'react';
+import { API_BASE_URL } from '@/constants/api';
+import { router } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
+import { createContext, useEffect, useState, type ReactNode } from 'react';
+import { Platform } from 'react-native';
 
 export type User = {
   id?: string | number;
   name?: string;
   email?: string;
+  username?: string;
   role?: string;
 };
 
@@ -20,39 +23,68 @@ type AuthContextValue = {
 
 export const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
+const TOKEN_KEY = 'auth_token';
+
+const secureSet = async (k: string, v: string) => {
+  if (Platform.OS !== 'web') await SecureStore.setItemAsync(k, v);
+  else localStorage.setItem(k, v);
+};
+const secureGet = async (k: string): Promise<string | null> => {
+  if (Platform.OS !== 'web') return SecureStore.getItemAsync(k);
+  return localStorage.getItem(k);
+};
+const secureDelete = async (k: string) => {
+  if (Platform.OS !== 'web') await SecureStore.deleteItemAsync(k);
+  else localStorage.removeItem(k);
+};
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [token, setToken] = useState<string | null>(null);
   const [user, setUser] = useState<User | null>(null);
-  // False keeps the unfinished starter usable; no session has been restored yet.
-  const [authLoading, setAuthLoading] = useState(false);
+  const [authLoading, setAuthLoading] = useState(true);
 
   const login = async (accessToken: string, userData: User) => {
-    // TODO EXAM: Save the access token with SecureStore.setItemAsync().
-    // TODO EXAM: Update token state and user state with the supplied arguments.
-    // TODO EXAM: Handle storage failures; never store the password.
+    try {
+      await secureSet(TOKEN_KEY, accessToken);
+      setToken(accessToken);
+      setUser(userData);
+    } catch (e) {
+      console.error('Failed to save token:', e);
+      throw e;
+    }
   };
 
   const logout = async () => {
-    // TODO EXAM: Delete the saved token using SecureStore.deleteItemAsync().
-    // TODO EXAM: Clear token state and user state.
-    // TODO EXAM: Handle storage errors and redirect to /sign-in after logout.
+    try { await secureDelete(TOKEN_KEY); } catch (e) { console.error(e); }
+    setToken(null);
+    setUser(null);
+    router.replace('/sign-in');
   };
 
   const restoreSession = async () => {
-    // TODO EXAM: Set authLoading while restoring the session.
-    // TODO EXAM: Read the saved token with SecureStore.getItemAsync().
-    // TODO EXAM: Validate the token via GET /profile with a Bearer token.
-    // TODO EXAM: Update token and user state for a valid session.
-    // TODO EXAM: Handle 401 Unauthorized / expired sessions and clear invalid credentials.
-    // TODO EXAM: Handle errors and stop authLoading in finally.
+    setAuthLoading(true);
+    try {
+      const saved = await secureGet(TOKEN_KEY);
+      if (!saved) return;
+      const res = await fetch(`${API_BASE_URL}/users/1`, {
+        headers: { Authorization: `Bearer ${saved}` },
+      });
+      if (!res.ok) {
+        if (res.status === 401) await secureDelete(TOKEN_KEY);
+        return;
+      }
+      const data = await res.json();
+      setToken(saved);
+      setUser({ id: data.id, name: data.name, email: data.email, username: data.username });
+    } catch (e) {
+      console.error('Session restore failed:', e);
+    } finally {
+      setAuthLoading(false);
+    }
   };
 
-  useEffect(() => {
-    // TODO EXAM: Call restoreSession() on startup.
-  }, []);
+  useEffect(() => { restoreSession(); }, []);
 
-  // SecureStore is native-only. The web skeleton makes no storage calls.
-  // TODO EXAM: Check platform availability before storage calls; test persistence on Android/iOS.
   return (
     <AuthContext.Provider value={{ token, user, authLoading, login, logout, restoreSession }}>
       {children}
