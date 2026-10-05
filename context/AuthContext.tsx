@@ -24,6 +24,7 @@ type AuthContextValue = {
 export const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 const TOKEN_KEY = 'auth_token';
+const USER_ID_KEY = 'auth_user_id';
 
 const secureSet = async (k: string, v: string) => {
   if (Platform.OS !== 'web') await SecureStore.setItemAsync(k, v);
@@ -46,6 +47,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async (accessToken: string, userData: User) => {
     try {
       await secureSet(TOKEN_KEY, accessToken);
+      if (userData.id !== undefined) await secureSet(USER_ID_KEY, String(userData.id));
       setToken(accessToken);
       setUser(userData);
     } catch (e) {
@@ -55,7 +57,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = async () => {
-    try { await secureDelete(TOKEN_KEY); } catch (e) { console.error(e); }
+    try {
+      await secureDelete(TOKEN_KEY);
+      await secureDelete(USER_ID_KEY);
+    } catch (e) { console.error(e); }
     setToken(null);
     setUser(null);
     router.replace('/sign-in');
@@ -66,11 +71,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const saved = await secureGet(TOKEN_KEY);
       if (!saved) return;
-      const res = await fetch(`${API_BASE_URL}/users/1`, {
+      const savedUserId = (await secureGet(USER_ID_KEY)) ?? '1';
+      const res = await fetch(`${API_BASE_URL}/users/${savedUserId}`, {
         headers: { Authorization: `Bearer ${saved}` },
       });
       if (!res.ok) {
-        if (res.status === 401) await secureDelete(TOKEN_KEY);
+        if (res.status === 401) {
+          await secureDelete(TOKEN_KEY);
+          await secureDelete(USER_ID_KEY);
+        }
         return;
       }
       const data = await res.json();

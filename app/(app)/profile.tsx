@@ -17,7 +17,7 @@ export default function ProfileScreen() {
       setError('');
       try {
         // GET /profile using fetch() and Bearer token
-        const response = await fetch(`${API_BASE_URL}/users/1`, {
+        const response = await fetch(`${API_BASE_URL}/users/${ctxUser?.id ?? 1}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (!response.ok) {

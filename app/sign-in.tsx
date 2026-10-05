@@ -24,19 +24,22 @@ export default function SignInScreen() {
     setLoading(true);
     setError('');
     try {
-      // POST /login using fetch() and async/await
-      const response = await fetch(`${API_BASE_URL}/posts`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-        body: JSON.stringify({ email: email.trim(), password }),
+      // Login check using fetch() and async/await: the email must exist in GET /users.
+      // (jsonplaceholder has no passwords, so the password is required but not verified.)
+      const response = await fetch(`${API_BASE_URL}/users`, {
+        headers: { Accept: 'application/json' },
       });
-      if (!response.ok) throw new Error('Invalid email or password.');
-      const data = await response.json();
-      const accessToken = `session-${data.id}-${Date.now()}`;
+      if (!response.ok) throw new Error('Unable to reach the server.');
+      const users = await response.json();
+      const found = users.find(
+        (u: any) => u.email?.toLowerCase() === email.trim().toLowerCase()
+      );
+      if (!found) throw new Error('Invalid email or password.');
+      const accessToken = `session-${found.id}-${Date.now()}`;
       const userData = {
-        id: data.id,
-        name: 'Mark Joseph P. Catolico',
-        email: email.trim(),
+        id: found.id,
+        name: found.name,
+        email: found.email,
         role: 'student',
       };
       await login(accessToken, userData);
