@@ -4,28 +4,28 @@
 
 ### Student Information
 
-Name:
+Name:   Mark Joseph P. Catolico
 
-Section:
+Section: 2013 - 8:00 - 10:00 am
 
-Date:
+Date: October 2, 2026
 
 ### Required Features
 
-- [ ] Login
-- [ ] Authentication state
-- [ ] Secure token storage
-- [ ] Protected navigation
-- [ ] Dashboard
-- [ ] Student API request
-- [ ] Loading state
-- [ ] Error state
-- [ ] Empty state
-- [ ] Search/filter
-- [ ] Dynamic student details
-- [ ] Profile
-- [ ] Session restoration
-- [ ] Logout
+- [/] Login
+- [/] Authentication state
+- [/] Secure token storage
+- [/] Protected navigation
+- [/] Dashboard
+- [/] Student API request
+- [/] Loading state
+- [/] Error state
+- [/] Empty state
+- [/] Search/filter
+- [/] Dynamic student details
+- [/] Profile
+- [/] Session restoration
+- [/] Logout
 
 ### API
 
